@@ -2,7 +2,7 @@ NAME
     ZM::Session - sessions manager for CGI
 
 VERSION
-    Session.pm v 0.1.0
+    Session.pm v 0.2.0
 
     Recent Changes:
         0.1.0

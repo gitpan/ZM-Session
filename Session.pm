@@ -1,5 +1,5 @@
 package ZM::Session;
-$ZM::Session::VERSION = '0.1.0';
+$ZM::Session::VERSION = '0.2.0';
 use strict;
 
 sub new
@@ -12,7 +12,7 @@ sub new
 
 sub start
 {
-	my ($cl,$print_content) = @_;
+	my ($cl,$print_content,$no_cookie) = @_;
     if (!defined(exists($cl->{lifetime})))
 	{
 		$cl->{lifetime} = 600;
@@ -26,14 +26,17 @@ sub start
 	{
 		$cl->id($cl->newID());
 	}
-	#SET COOKIE
-	my @week=("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
-	my @months=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday)=gmtime(time()+$cl->{lifetime});
-	my $t=sprintf("%s, %02d-%s-%02d %02d:%02d:%02d GMT",$week[$wday],$mday,$months[$mon],$year % 100,$hour,$min,$sec);
-	print "Content-type: text/html\n" if($print_content ne "nocontent");
-	print $cl->{head};
-	print "Set-Cookie: SID=".$cl->id."; expires=".$t."\n\n";
+	if($no_cookie eq "")
+	{
+		#SET COOKIE
+		my @week=("Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday");
+		my @months=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec");
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday)=gmtime(time()+$cl->{lifetime});
+		my $t=sprintf("%s, %02d-%s-%02d %02d:%02d:%02d GMT",$week[$wday],$mday,$months[$mon],$year % 100,$hour,$min,$sec);
+		print "Content-type: text/html\n" if($print_content ne "nocontent");
+		print $cl->{head};
+		print "Set-Cookie: SID=".$cl->id."; expires=".$t."\n\n";
+	}
     if (-e $cl->getfile())
 	{
 		return 0;
@@ -330,7 +333,7 @@ ZM::Session - sessions manager for CGI
 
 =head1 VERSION
 
-Session.pm v 0.1.0
+Session.pm v 0.2.0
 
 =over 4
 
