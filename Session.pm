@@ -1,5 +1,5 @@
 package ZM::Session;
-$ZM::Session::VERSION = '0.2.0';
+$ZM::Session::VERSION = '0.2.1';
 use strict;
 
 sub new
@@ -12,8 +12,8 @@ sub new
 
 sub start
 {
-	my ($cl,$print_content,$no_cookie) = @_;
-    if (!defined(exists($cl->{lifetime})))
+	my ($cl,$print_content,$no_cookie, $double_enter) = @_;
+    if (!defined($cl->{lifetime}))
 	{
 		$cl->{lifetime} = 600;
 	}
@@ -35,7 +35,8 @@ sub start
 		my $t=sprintf("%s, %02d-%s-%02d %02d:%02d:%02d GMT",$week[$wday],$mday,$months[$mon],$year % 100,$hour,$min,$sec);
 		print "Content-type: text/html\n" if($print_content ne "nocontent");
 		print $cl->{head};
-		print "Set-Cookie: SID=".$cl->id."; expires=".$t."\n\n";
+		print "Set-Cookie: SID=".$cl->id."; expires=".$t."; path=/\n";
+		print "\n" if $double_enter eq "";
 	}
     if (-e $cl->getfile())
 	{
@@ -57,10 +58,11 @@ sub check_sessions
     my $cl = shift;
     opendir(SD,$cl->{path});
     my @files = readdir(SD);
-    shift @files;
-    shift @files;
+#    shift @files;
+#    shift @files;
     foreach my $f (@files)
 	{
+	    next if $f!~/^zm_sess_/;
 		if (((stat($cl->{path}.$f))[9] + $cl->{lifetime}) < time())
 		{ 
 			unlink($cl->{path}.$f); 
@@ -163,6 +165,27 @@ sub is_set
     return 0;
 }
 
+sub list
+{
+    my ($cl) = @_;
+    my %h;
+    if (!$cl->have_id())
+	{
+		return -1;
+	}
+    if (-e $cl->getfile())
+    {
+	open(SF,$cl->getfile);
+	while (my $l = <SF>)
+	{
+	    my @line = split (/=/,$l);
+	    $h{$line[0]}=$line[1];
+	}
+	close(SF);
+	return %h;
+    }
+    return 0;
+}
 
 sub unset
 {
@@ -210,6 +233,7 @@ sub unsetall
 sub get
 {
     my ($cl,$name) = @_;
+    $name=~s/(\(|\))/\\$1/;
     if (!$cl->have_id())
 	{
 		return -1;
